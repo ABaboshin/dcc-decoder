@@ -1,8 +1,6 @@
 #include <stdio.h>
 #include "RP2040DccDecoder.h"
 
-#define DCC_INPUT_PIN 17
-
 int main()
 {
   stdio_init_all();
@@ -13,7 +11,8 @@ int main()
     sleep_ms(1000);
   }
 
-  RP2040DccDecoder d;
+  RP2040DccDecoder d(17, true);
+  d.Start();
 
   while (1)
   {
