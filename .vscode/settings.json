@@ -1,0 +1,8 @@
+{
+    "cmake.sourceDirectory": "/Users/ababoshin/playground/dcc-decoder/dcc",
+    "files.associations": {
+        "cstdint": "cpp",
+        "compare": "cpp",
+        "format": "cpp"
+    }
+}
