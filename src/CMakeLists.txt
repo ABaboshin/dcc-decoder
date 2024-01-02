@@ -23,6 +23,7 @@ add_executable(
         main.cpp
         DccDecoder.cpp
         DccDecoderState.cpp
+        DccDevice.cpp
         RP2040DccDecoder.cpp
         )
 

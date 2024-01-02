@@ -5,6 +5,11 @@ DccDecoder::DccDecoder ()
     state.Reset();
 }
 
+std::uint64_t DccDecoder::now()
+{
+    return 0;
+}
+
 // https://www.nmra.org/sites/default/files/standards/sandrp/pdf/s-9.1_electrical_standards_for_digital_command_control_2021.pdf
 void DccDecoder::OnFalled()
 {
@@ -66,4 +71,9 @@ void DccDecoder::onBitReceived(uint8_t bit)
     default:
         break;
     }
+}
+
+void DccDecoder::Register(const DccDevice& device)
+{
+    devices.push_back(device);
 }

@@ -2,16 +2,20 @@
 #include <cstdint>
 #include <vector>
 #include "DccDecoderState.h"
+#include "DccDevice.h"
 
 class DccDecoder {
 private:
     DccDecoderState state;
     std::uint64_t lastRise;
 
-    virtual std::uint64_t now() = 0;
+    virtual std::uint64_t now();
+
     void onBitReceived(uint8_t bit);
 
     void process(std::vector<std::uint8_t> data);
+
+    std::vector<DccDevice> devices;
 
 public:
     DccDecoder ();
@@ -20,5 +24,7 @@ public:
 
     void OnFalled();
 
-    virtual void Start() = 0;
+    virtual void Start() {};
+
+    void Register(const DccDevice& device);
 };
