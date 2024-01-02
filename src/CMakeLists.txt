@@ -1,18 +1,16 @@
 cmake_minimum_required(VERSION 3.13)
 
-# Pull in SDK (must be before project)
 include(pico_sdk_import.cmake)
 
 project(dcc C CXX ASM)
 set(CMAKE_C_STANDARD 11)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 add_subdirectory(common)
 include_directories(common)
 
 set(PICO_DECODER_PATH ${PROJECT_SOURCE_DIR})
 
-# Initialize the SDK
 pico_sdk_init()
 
 add_compile_options(-Wall
@@ -33,7 +31,6 @@ target_compile_definitions(
         PICO_XOSC_STARTUP_DELAY_MULTIPLIER=64
 )
 
-# Add pico_multicore which is required for multicore functionality
 target_link_libraries(
         dcc
         pico_stdlib

@@ -39,8 +39,3 @@ void RP2040DccDecoder::Start()
     gpio_set_irq_enabled_with_callback(pin, GPIO_IRQ_EDGE_FALL, false, &onfall);
     gpio_set_irq_enabled_with_callback(pin, GPIO_IRQ_EDGE_RISE, false, &onrise);
 }
-
-void DccDecoder::process(std::vector<std::uint8_t> data)
-{
-    
-}

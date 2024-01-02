@@ -63,7 +63,7 @@ void DccDecoder::onBitReceived(uint8_t bit)
                 state.Data.push_back(0);
                 if (state.Data.size() > 6) state.Reset();
             } else {
-                process(state.Data);
+                process();
                 state.Reset();
             }
         }
@@ -76,4 +76,16 @@ void DccDecoder::onBitReceived(uint8_t bit)
 void DccDecoder::Register(const DccDevice& device)
 {
     devices.push_back(device);
+}
+
+void DccDecoder::process()
+{
+    for (auto &it: devices)
+    {
+        std::uint8_t addressLength;
+        if (it.AddressMatched(state.Data, addressLength))
+        {
+            it.Process(std::span(state.Data.begin() + addressLength, state.Data.end()));
+        }
+    }
 }

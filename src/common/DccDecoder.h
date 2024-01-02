@@ -13,7 +13,7 @@ private:
 
     void onBitReceived(uint8_t bit);
 
-    void process(std::vector<std::uint8_t> data);
+    void process();
 
     std::vector<DccDevice> devices;
 
