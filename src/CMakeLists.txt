@@ -7,6 +7,9 @@ project(dcc C CXX ASM)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 
+add_subdirectory(common)
+include_directories(common)
+
 set(PICO_DECODER_PATH ${PROJECT_SOURCE_DIR})
 
 # Initialize the SDK
@@ -21,9 +24,6 @@ add_compile_options(-Wall
 add_executable(
         dcc
         main.cpp
-        DccDecoder.cpp
-        DccDecoderState.cpp
-        DccDevice.cpp
         RP2040DccDecoder.cpp
         )
 
@@ -41,6 +41,7 @@ target_link_libraries(
         hardware_adc
         hardware_flash
         pico_multicore
+        dcc-lib
 )
 
 pico_enable_stdio_usb(dcc 1)
