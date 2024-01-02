@@ -3,7 +3,7 @@
 #include "DccDecoder.h"
 #include "pico/stdlib.h"
 
-class RP2040DccDecoder : DccDecoder<uint64_t>
+class RP2040DccDecoder : DccDecoder
 {
 private:
     bool default1;

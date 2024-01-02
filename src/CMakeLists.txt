@@ -22,7 +22,9 @@ add_executable(
         dcc
         main.cpp
         DccDecoder.cpp
-        RP2040DccDecoder.cpp)
+        DccDecoderState.cpp
+        RP2040DccDecoder.cpp
+        )
 
 target_compile_definitions(
         dcc PUBLIC
