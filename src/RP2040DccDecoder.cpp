@@ -14,6 +14,10 @@ RP2040DccDecoder::RP2040DccDecoder(int pin, bool default1)
     this->default1 = default1;
     this->pin = pin;
     decoder = std::make_shared<RP2040DccDecoder>(*this);
+
+    gpio_init(pin);
+    gpio_set_dir(pin, GPIO_IN);
+    gpio_pull_up(pin);
 }
 
 void onfall(uint gpio, uint32_t events)

@@ -23,6 +23,7 @@ add_executable(
         dcc
         main.cpp
         RP2040DccDecoder.cpp
+        Train.cpp
         )
 
 target_compile_definitions(
@@ -35,9 +36,6 @@ target_link_libraries(
         dcc
         pico_stdlib
         hardware_pwm
-        hardware_adc
-        hardware_flash
-        pico_multicore
         dcc-lib
 )
 

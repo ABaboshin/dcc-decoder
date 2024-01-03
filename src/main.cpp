@@ -1,5 +1,7 @@
 #include <stdio.h>
+#include "pico/stdlib.h"
 #include "RP2040DccDecoder.h"
+#include "Train.h"
 
 int main()
 {
@@ -11,10 +13,13 @@ int main()
     sleep_ms(1000);
   }
 
-  RP2040DccDecoder d(17, true);
-  d.Start();
+  // RP2040DccDecoder d(17, true);
+  // d.Start();
+
+  Train t(1, 3, 4);
 
   while (1)
   {
+
   }
 }
