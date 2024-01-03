@@ -2,6 +2,7 @@
 #include "pico/stdlib.h"
 #include "RP2040DccDecoder.h"
 #include "Train.h"
+#include "MP3Player.h"
 
 int main()
 {
@@ -16,7 +17,10 @@ int main()
   // RP2040DccDecoder d(17, true);
   // d.Start();
 
-  Train t(1, 3, 4);
+  // Train t(1, 3, 4);
+
+  MP3Player p(10, 11);
+  p.Play();
 
   while (1)
   {

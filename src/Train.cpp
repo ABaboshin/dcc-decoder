@@ -37,7 +37,7 @@ void Train::initMotorPwm(std::uint8_t pin)
 
 void Train::Process(const std::span<std::uint8_t>& data)
 {
-    const auto isDirectionCommand = data[0] & 0b00011111 > 0;
+    const auto isDirectionCommand = (data[0] & 0b00011111) > 0;
     if (isDirectionCommand)
     {
         const auto direction = data[0] & 0b10000000;
