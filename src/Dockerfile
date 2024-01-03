@@ -4,6 +4,8 @@ WORKDIR /
 RUN git clone https://github.com/raspberrypi/pico-sdk.git
 WORKDIR /pico-sdk
 RUN git submodule update --init
+WORKDIR /
+RUN git clone https://github.com/ikjordan/picomp3lib.git
 WORKDIR /dcc
 COPY . .
 RUN cp /pico-sdk/external/pico_sdk_import.cmake .

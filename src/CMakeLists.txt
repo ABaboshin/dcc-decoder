@@ -6,7 +6,7 @@ project(dcc C CXX ASM)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 20)
 
-add_subdirectory(common)
+add_subdirectory(common /picomp3lib/src)
 include_directories(common)
 
 set(PICO_DECODER_PATH ${PROJECT_SOURCE_DIR})
