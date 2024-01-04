@@ -75,7 +75,7 @@ target_link_libraries(
         hardware_dma
         hardware_pio
         dcc-lib
-        # picomp3lib
+        picomp3lib
 )
 
 pico_enable_stdio_usb(dcc 1)

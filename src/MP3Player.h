@@ -1,16 +1,16 @@
-#pragma once
+// #pragma once
 // #include <cstdint>
 
 // #define DMA_BUFFER_SIZE 22000
 
-class PwmData
-{
-public:
-    std::uint8_t PinSlice;
-    std::uint8_t Pin;
-    // std::int32_t DmaChannel;
-    // std::int16_t DmaBuffer[DMA_BUFFER_SIZE];
-};
+// class PwmData
+// {
+// public:
+//     std::uint8_t PinSlice;
+//     std::uint8_t Pin;
+//     std::int32_t DmaChannel;
+//     std::int16_t DmaBuffer[DMA_BUFFER_SIZE];
+// };
 
 // class MP3Player
 // {
