@@ -4,18 +4,15 @@ WORKDIR /
 RUN git clone https://github.com/raspberrypi/pico-sdk.git
 WORKDIR /pico-sdk
 RUN git submodule update --init
-# WORKDIR /
-# RUN git clone https://github.com/ikjordan/picomp3lib.git
+WORKDIR /
+RUN git clone https://github.com/ikjordan/picomp3lib.git
 WORKDIR /dcc
 COPY . .
 RUN cp /pico-sdk/external/pico_sdk_import.cmake .
 ENV PICO_SDK_PATH=/pico-sdk
-RUN ffmpeg -i happy.mp3 -codec:a libmp3lame -b:a 40000 -s 44.1 output.mp3
-# RUN ffmpeg -i happy.mp3 -acodec pcm_u8 -ar 44100 output.wav
+RUN ffmpeg -i test.mp3 -codec:a libmp3lame -b:a 44.1k output.mp3
 RUN cmake .
 RUN make
 
 FROM scratch
 COPY --from=build /dcc/dcc.uf2 /
-COPY --from=build /dcc/output.mp3 /
-# COPY --from=build /dcc/output.wav /

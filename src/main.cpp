@@ -19,8 +19,8 @@ int main()
 
   // Train t(1, 3, 4);
 
-  // MP3Player p(10, 11);
-  // p.Play();
+  MP3Player p(10, 11);
+  p.Play();
 
   while (1)
   {
