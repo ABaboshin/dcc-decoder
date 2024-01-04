@@ -16,6 +16,7 @@ add_compile_options(-Wall
         -Wno-format
         -Wno-unused-function
         -Wno-maybe-uninitialized
+        -DDEBUG_STATUS
         )
 
 # add_custom_command(

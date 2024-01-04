@@ -5,7 +5,9 @@
 typedef struct FIL 
 {
     // FILE* fs;
-    void* dummy;
+    const unsigned char* data;
+    size_t size;
+    size_t currentPosition;
 } FIL;
 
 FRESULT f_open (FIL* fp, const TCHAR* path, BYTE mode);
