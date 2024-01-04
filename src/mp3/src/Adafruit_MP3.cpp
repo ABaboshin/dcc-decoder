@@ -1,17 +1,7 @@
 #include "Adafruit_MP3.h"
 #include "mp3common.h"
-
-#if defined(__SAMD51__) // feather/metro m4
-
-#define WAIT_TC16_REGS_SYNC(x) while(x->COUNT16.SYNCBUSY.bit.ENABLE);
-
-#elif defined(__MK66FX1M0__) || defined(__MK64FX512__) || defined(__MK20DX256__) // teensy 3.6, 3.5. or 3.1/2
-
-IntervalTimer Adafruit_MP3::_MP3Timer;
-uint32_t Adafruit_MP3::currentPeriod;
-static void MP3_Handler();
-
-#endif
+#include <cstring>
+#include <iostream>
 
 volatile bool activeOutbuf;
 Adafruit_MP3_outbuf outbufs[2];
@@ -19,139 +9,6 @@ volatile int16_t *outptr;
 static void (*sampleReadyCallback)(int16_t, int16_t);
 
 uint8_t Adafruit_MP3::numChannels = 0;
-/**
-*****************************************************************************************
-*  @brief      enable the playback timer
-*
-*  @return     none
-****************************************************************************************/
-static inline void enableTimer()
-{
-#if defined(__SAMD51__) // feather/metro m4
-	MP3_TC->COUNT16.CTRLA.reg |= TC_CTRLA_ENABLE;
-	WAIT_TC16_REGS_SYNC(MP3_TC)
-#elif defined(__MK66FX1M0__) || defined(__MK64FX512__) || defined(__MK20DX256__) // teensy 3.6, 3.5. or 3.1/2
-	Adafruit_MP3::_MP3Timer.begin(MP3_Handler, Adafruit_MP3::currentPeriod);
-#elif defined(NRF52)
-  MP3_TIMER->TASKS_START = 1;
-#endif
-}
-
-/**
-*****************************************************************************************
-*  @brief      disable the playback timer
-*
-*  @return     none
-****************************************************************************************/
-static inline void disableTimer()
-{
-#if defined(__SAMD51__) // feather/metro m4
-	MP3_TC->COUNT16.CTRLA.bit.ENABLE = 0;
-	WAIT_TC16_REGS_SYNC(MP3_TC)
-#elif defined(__MK66FX1M0__) || defined(__MK64FX512__) || defined(__MK20DX256__) // teensy 3.6, 3.5. or 3.1/2
-	Adafruit_MP3::_MP3Timer.end();
-#elif defined(NRF52)
-  MP3_TIMER->TASKS_STOP = 1;
-#endif
-}
-
-/**
-*****************************************************************************************
-*  @brief      reset the playback timer
-*
-*  @return     none
-****************************************************************************************/
-#if defined(__SAMD51__) // feather/metro m4
-static inline void resetTC (Tc* TCx)
-{
-
-  // Disable TCx
-  TCx->COUNT16.CTRLA.reg &= ~TC_CTRLA_ENABLE;
-  WAIT_TC16_REGS_SYNC(TCx)
-
-    // Reset TCx
-    TCx->COUNT16.CTRLA.reg = TC_CTRLA_SWRST;
-  WAIT_TC16_REGS_SYNC(TCx)
-    while (TCx->COUNT16.CTRLA.bit.SWRST);
-
-}
-#endif
-
-static inline void configureTimer()
-{
-#if defined(__SAMD51__) // feather/metro m4
-
-  NVIC_DisableIRQ(MP3_IRQn);
-  NVIC_ClearPendingIRQ(MP3_IRQn);
-  NVIC_SetPriority(MP3_IRQn, 0);
-
-  GCLK->PCHCTRL[MP3_GCLK_ID].reg = GCLK_PCHCTRL_GEN_GCLK0_Val | (1 << GCLK_PCHCTRL_CHEN_Pos);
-	
-  resetTC(MP3_TC);
-	
-  //configure timer for 44.1khz
-  MP3_TC->COUNT16.WAVE.reg = TC_WAVE_WAVEGEN_MFRQ;  // Set TONE_TC mode as match frequency
-
-  MP3_TC->COUNT16.CTRLA.reg |= TC_CTRLA_MODE_COUNT16 | TC_CTRLA_PRESCALER_DIV4;
-  WAIT_TC16_REGS_SYNC(MP3_TC)
-
-    MP3_TC->COUNT16.CC[0].reg = (uint16_t)( (SystemCoreClock >> 2) / MP3_SAMPLE_RATE_DEFAULT);
-  WAIT_TC16_REGS_SYNC(MP3_TC)
-
-    // Enable the TONE_TC interrupt request
-    MP3_TC->COUNT16.INTENSET.bit.MC0 = 1;
-
-#elif defined(NRF52)
-
-  NVIC_DisableIRQ(MP3_IRQn);
-  NVIC_ClearPendingIRQ(MP3_IRQn);
-  NVIC_SetPriority(MP3_IRQn, 15);
-
-  disableTimer();
-  MP3_TIMER->MODE = 0; //timer mode
-  MP3_TIMER->BITMODE = 0; //16 bit mode
-  MP3_TIMER->PRESCALER = 0; //no prescale
-  MP3_TIMER->CC[0] = 16000000UL/MP3_SAMPLE_RATE_DEFAULT;
-  MP3_TIMER->EVENTS_COMPARE[0] = 0;
-  MP3_TIMER->TASKS_CLEAR = 1;
-
-  MP3_TIMER->INTENSET = (1UL << 16); //enable compare 0 interrupt
-
-#elif defined(__MK66FX1M0__) || defined(__MK64FX512__) || defined(__MK20DX256__) // teensy 3.6, 3.5. or 3.1/2
-	float sec = 1.0 / (float)MP3_SAMPLE_RATE_DEFAULT;
-	Adafruit_MP3::currentPeriod = sec * 1000000UL;
-#endif
-}
-
-static inline void acknowledgeInterrupt()
-{
-#if defined(__SAMD51__) // feather/metro m4
-  if (MP3_TC->COUNT16.INTFLAG.bit.MC0 == 1) {
-    MP3_TC->COUNT16.INTFLAG.bit.MC0 = 1;
-  }
-
-#elif defined(NRF52)
-  MP3_TIMER->EVENTS_COMPARE[0] = 0;
-  MP3_TIMER->TASKS_CLEAR = 1;
-#endif
-}
-
-static inline void updateTimerFreq(uint32_t freq)
-{
-  disableTimer();
-
-#if defined(__SAMD51__) // feather/metro m4
-	MP3_TC->COUNT16.CC[0].reg = (uint16_t)( (SystemCoreClock >> 2) / freq);
-	WAIT_TC16_REGS_SYNC(MP3_TC);
-#elif defined(__MK66FX1M0__) || defined(__MK64FX512__) || defined(__MK20DX256__) // teensy 3.6, 3.5. or 3.1/2
-	float sec = 1.0 / (float)freq;
-	Adafruit_MP3::currentPeriod = sec * 1000000UL;
-#elif defined(NRF52)
-  MP3_TIMER->CC[0] = 16000000UL/freq;
-#endif
-
-  enableTimer();
-}
 
 /**
 *****************************************************************************************
@@ -164,8 +21,6 @@ bool Adafruit_MP3::begin()
   sampleReadyCallback = NULL;
   bufferCallback = NULL;
 
-  configureTimer();
-	
   if ((hMP3Decoder = MP3InitDecoder()) == 0)
     {
       return false;
@@ -222,24 +77,11 @@ void Adafruit_MP3::play()
   outbufs[1].count = 0;
   playing = false;
 
-  //start the playback timer
-  enableTimer();
-
-#if defined(__SAMD51__) || defined(NRF52) // feather/metro m4
-  NVIC_EnableIRQ(MP3_IRQn);
-#endif
 }
 
 void Adafruit_MP3_DMA::play()
 {
-#if defined(__SAMD51__)
-  //don't need an interrupt here
-  MP3_TC->COUNT16.INTENCLR.bit.MC0 = 1;
-#endif
 	Adafruit_MP3::play();
-#if defined(__SAMD51__) || defined(NRF52) // feather/metro m4
-	NVIC_DisableIRQ(MP3_IRQn); //we don't need the interrupt
-#endif
 	leftoverSamples = 0;
 
   //fill both buffers
@@ -254,7 +96,7 @@ void Adafruit_MP3_DMA::play()
 ****************************************************************************************/
 void Adafruit_MP3::pause()
 {
-  disableTimer();
+  
 }
 
 /**
@@ -266,7 +108,7 @@ void Adafruit_MP3::pause()
 ****************************************************************************************/
 void Adafruit_MP3::resume()
 {
-  enableTimer();
+  
 }
 
 /**
@@ -308,13 +150,11 @@ void Adafruit_MP3_DMA::getBuffers(int16_t **ping, int16_t **pong){
 *  @return     none
 ****************************************************************************************/
 int Adafruit_MP3::tick(){
-  noInterrupts();
   if (outbufs[activeOutbuf].count == 0 && outbufs[!activeOutbuf].count > 0) {
     //time to swap the buffers
     activeOutbuf = !activeOutbuf;
     outptr = outbufs[activeOutbuf].buffer;
   }
-  interrupts();
 	
   //if we are running out of samples, and don't yet have another buffer ready, get busy.
   if ((outbufs[activeOutbuf].count < BUFFER_LOWER_THRESH) && 
@@ -329,6 +169,7 @@ int Adafruit_MP3::tick(){
 	Serial.println(bytesLeft);
       */
       memmove(inBuf, readPtr, bytesLeft);
+      std::cout << "moved" << std::endl;
       //Serial.println("moved");
       readPtr = inBuf;
       writePtr = inBuf + bytesLeft;
@@ -336,6 +177,7 @@ int Adafruit_MP3::tick(){
 		
     //get more data from the user application
     if (bufferCallback != NULL){
+      std::cout << "ask" << std::endl;
       //Serial.println("ask!");
       if ( (inbufend - writePtr) > 0) {
 	int bytesRead = bufferCallback(writePtr, inbufend - writePtr);
@@ -348,11 +190,13 @@ int Adafruit_MP3::tick(){
     int err, offset;
     
     if (!playing) {
-      Serial.println("Starting playback");
+      // printf("Starting playback");
+      std::cout << "Starting playback" << std::endl;
       
       /* Find start of next MP3 frame. Assume EOF if no sync found. */
       offset = MP3FindSyncWord(readPtr, bytesLeft);
-      Serial.print("Offset: "); Serial.println(offset);
+      // Serial.print("Offset: "); Serial.println(offset);
+      std::cout << "Offset: " << offset << std::endl;
       if (offset >= 0) {
 	readPtr += offset;
 	bytesLeft -= offset;
@@ -360,12 +204,14 @@ int Adafruit_MP3::tick(){
 		  
       err = MP3GetNextFrameInfo(hMP3Decoder, &frameInfo, readPtr);
       if (err == ERR_MP3_INVALID_FRAMEHEADER) {
+        std::cout << "err == ERR_MP3_INVALID_FRAMEHEADER" << std::endl;
 	readPtr += 1;
 	bytesLeft -= 1;
       } else {
-	Serial.print("Setting timer sample rate to: "); Serial.println(frameInfo.samprate);
+	// Serial.print("Setting timer sample rate to: "); Serial.println(frameInfo.samprate);
+  std::cout << "Setting timer sample rate to: " << frameInfo.samprate << std::endl;
 	if (frameInfo.samprate != MP3_SAMPLE_RATE_DEFAULT) {
-	  updateTimerFreq(frameInfo.samprate);
+	  // updateTimerFreq(frameInfo.samprate);
 	}
 	playing = true;
 	numChannels = frameInfo.nChans;
@@ -376,6 +222,7 @@ int Adafruit_MP3::tick(){
     offset = MP3FindSyncWord(readPtr, bytesLeft);
     if (offset >= 0) {
       //Serial.print("found sync @ "); Serial.println(offset);
+      std::cout << "found sync " << offset << std::endl;
       readPtr += offset;
       bytesLeft -= offset;
 
@@ -384,15 +231,19 @@ int Adafruit_MP3::tick(){
       if (err) {
 	// sometimes we have a bad frame, lets just nudge forward one byte
 	if (err == ERR_MP3_INVALID_FRAMEHEADER) {
+    std::cout << "err == ERR_MP3_INVALID_FRAMEHEADER " << std::endl;
 	  readPtr += 1;
 	  bytesLeft -= 1;
 	}
+  std::cout << "err " << err << std::endl;
 	return err;
       }
       MP3DecInfo *mp3DecInfo = (MP3DecInfo *)hMP3Decoder;
       outbufs[!activeOutbuf].count += mp3DecInfo->nGrans * mp3DecInfo->nGranSamps * mp3DecInfo->nChans;
     }
   }
+
+  std::cout << "return 0 " << std::endl;
   return 0;
 }
 
@@ -445,7 +296,7 @@ int Adafruit_MP3_DMA::fill(){
       if(err != ERR_MP3_INVALID_FRAMEHEADER){
 	if(frameInfo.samprate != MP3_SAMPLE_RATE_DEFAULT)
 	  {
-	    updateTimerFreq(frameInfo.samprate);
+	    // updateTimerFreq(frameInfo.samprate);
 	  }
 	playing = true;
 	Adafruit_MP3::numChannels = frameInfo.nChans;
@@ -502,9 +353,6 @@ int Adafruit_MP3_DMA::fill(){
  *
  *  @return     none
  ****************************************************************************************/
-#if defined(NRF52)
-extern "C" {
-#endif
 void MP3_Handler()
 {
   //disableTimer();
@@ -525,7 +373,7 @@ void MP3_Handler()
   
   //enableTimer();
   
-  acknowledgeInterrupt();
+  // acknowledgeInterrupt();
 }
 #if defined(NRF52)
 }

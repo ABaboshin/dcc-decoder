@@ -1,45 +1,20 @@
 #ifndef LIB_ADAFRUIT_MP3_H
 #define LIB_ADAFRUIT_MP3_H
 
-#include "Arduino.h"
-
-#if defined(__MK66FX1M0__) || defined(__MK64FX512__) || defined(__MK20DX256__)|| defined(NRF52)	// teensy 3.6, 3.5, 3.1/2, or Adafruit Feather nRF52
-#define ARM_MATH_CM4
-#endif
-
-#include "arm_math.h"
 #include "mp3dec.h"
+#include <cstdint>
+#include <cstddef>
+#include <cstdlib>
+
+using namespace std;
 
 //TODO: decide on a reasonable buffer size
-#if defined(NRF52)
 #define MP3_OUTBUF_SIZE (4 * 1024)
 #define MP3_INBUF_SIZE (2 * 1024)
 
 #define BUFFER_LOWER_THRESH (1 * 1024)
-#else
-#define MP3_OUTBUF_SIZE (4 * 1024)
-#define MP3_INBUF_SIZE (2 * 1024)
-
-#define BUFFER_LOWER_THRESH (1 * 1024)
-#endif
 
 #define MP3_SAMPLE_RATE_DEFAULT 44100
-
-#if defined(__SAMD51__) // feather/metro m4
-
-#define MP3_TC TC2
-#define MP3_IRQn TC2_IRQn
-#define MP3_Handler TC2_Handler
-#define MP3_GCLK_ID TC2_GCLK_ID
-#define MP3_DMA_TRIGGER TC2_DMAC_ID_MC_0
-
-#elif defined(NRF52)
-
-#define MP3_TIMER NRF_TIMER1
-#define MP3_IRQn TIMER1_IRQn
-#define MP3_Handler TIMER1_IRQHandler
-
-#endif
 
 struct Adafruit_MP3_outbuf {
 	volatile int count;
@@ -60,17 +35,9 @@ public:
 	
 	int tick();
 
-#if defined(__MK66FX1M0__) || defined(__MK64FX512__) || defined(__MK20DX256__) // teensy 3.6, 3.5, or 3.1/2
-	static IntervalTimer _MP3Timer;
-	static uint32_t currentPeriod;
-#endif
-
 	static uint8_t numChannels;
 	
 protected:
-#if defined(__SAMD51__) // feather/metro m4
-	Tc *_tc;
-#endif
 	HMP3Decoder hMP3Decoder;
 	
 	volatile int bytesLeft;
@@ -106,5 +73,7 @@ private:
 	MP3FrameInfo frameInfo;
 	void (*decodeCallback)(int16_t *, int);
 };
+
+void MP3_Handler();
 
 #endif
