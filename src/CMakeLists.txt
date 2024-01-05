@@ -7,8 +7,7 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 20)
 
 add_subdirectory(common)
-add_subdirectory(/picomp3lib/src /picomp3lib/src/build)
-include_directories(common fs /picomp3lib/src /picomp3lib /picomp3lib/interface)
+include_directories(common fs mp3/src)
 
 pico_sdk_init()
 
@@ -50,10 +49,13 @@ add_executable(
         main.cpp
         RP2040DccDecoder.cpp
         Train.cpp
-        /picomp3lib/interface/music_file.c
+        # /picomp3lib/interface/music_file.c
         MP3Player.cpp
-        fs/ff.c
-        
+        # fs/ff.c
+        mp3/src/bitstream.c     mp3/src/dequant.c       mp3/src/hufftabs.c      mp3/src/mp3tabs.c       mp3/src/stproc.c
+mp3/src/buffers.c       mp3/src/dqchan.c        mp3/src/imdct.c         mp3/src/polyphase.c     mp3/src/subband.c
+mp3/src/dct32.c         mp3/src/huffman.c       mp3/src/mp3dec.c        mp3/src/scalfact.c      mp3/src/trigtabs.c
+mp3/src/Adafruit_MP3.cpp
         )
 
 # add_link_options(
@@ -71,6 +73,7 @@ target_link_libraries(
         pico_stdlib
         hardware_pwm
         hardware_dma
+        hardware_pio
         dcc-lib
         picomp3lib
 )
