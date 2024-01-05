@@ -15,9 +15,10 @@ long map(long x, long in_min, long in_max, long out_min, long out_max)
 }
 
 void writeDacs(int16_t l, int16_t r){
-  std::cout << "write dac " << l  << " " << r << std::endl;
-  uint16_t val = map(l, -32768, 32767, 0, 4095);
+  
+  uint16_t val = map(l, -32768, 32767, 0, 255);
   pwm_set_gpio_level(10, val);
+  std::cout << "write dac " << l  << " " << r << " " << val << std::endl;
 
 // #if defined(__SAMD51__) // feather/metro m4
 //   analogWrite(A0, val);
