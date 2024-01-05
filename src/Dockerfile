@@ -11,8 +11,11 @@ COPY . .
 RUN cp /pico-sdk/external/pico_sdk_import.cmake .
 ENV PICO_SDK_PATH=/pico-sdk
 RUN ffmpeg -i test.mp3 -codec:a libmp3lame -b:a 44.1k output.mp3
-RUN cmake .
-RUN make
+# RUN ffmpeg -i output.mp3 -acodec pcm_u8 -ar 22050 output.wav
+
+# RUN cmake .
+# RUN make
 
 FROM scratch
-COPY --from=build /dcc/dcc.uf2 /
+# COPY --from=build /dcc/dcc.uf2 /
+COPY --from=build /dcc/output.mp3 /

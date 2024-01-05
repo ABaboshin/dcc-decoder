@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-project(fs-memory C CXX ASM)
+project(fs C CXX ASM)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 20)
 
@@ -11,11 +11,11 @@ add_compile_options(-Wall
         )
 
 add_library(
-        fs-memory STATIC
+        fs STATIC
         ff.c
         )
 
 # Add pico_multicore which is required for multicore functionality
 target_link_libraries(
-        fs-memory
+        fs
 )
