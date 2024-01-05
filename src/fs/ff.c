@@ -5,23 +5,23 @@
 
 inline FRESULT f_read (FIL* fp, void* buff, UINT btr, UINT* br)
 {
-    printf("f_read %u\n", btr);
-
     auto minRead = fmin(btr, fp->size - fp->currentPosition);
 
-    printf("f_read %u\n", minRead);
+    printf("f_read offset %u from %u read %u can read %u\n", fp->currentPosition, fp->size, btr, minRead);
+
 
     if (minRead == 0)
     {
         return FR_NOT_OK;
     }
 
-    memcpy((const unsigned char*)buff, fp->data + fp->currentPosition, minRead);
+    memcpy(buff, &fp->data[fp->currentPosition], minRead);
+    const unsigned char* x = (const unsigned char*)buff;
     *br = minRead;
     fp->currentPosition += minRead;
     for (auto i = 0; i < fmin(btr, 10); i++)
     {
-        printf("%u ", fp->data[i]);
+        printf("%u ", x[i]);
     }
     printf("\n");
     // std::cout << "f_read" << std::endl;
@@ -36,8 +36,14 @@ inline FRESULT f_open (FIL* fp, const TCHAR* path, BYTE mode)
 
 inline FRESULT f_lseek (FIL* fp, FSIZE_t ofs)
 {
+    printf("f_lseek %u\n", ofs);
+    if (ofs < fp->size)
+    {
+        fp->currentPosition = ofs;
+        return FR_OK;    
+    }
     fp->currentPosition = 0;
-    return FR_OK;
+    return FR_NOT_OK;
 }
 
 inline FRESULT f_close (FIL* fp)
