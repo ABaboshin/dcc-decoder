@@ -7,9 +7,8 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 20)
 
 add_subdirectory(common)
-# add_subdirectory(/picomp3lib/src /picomp3lib/src/build)
-add_subdirectory(picomp3lib/src)
-include_directories(common fs picomp3lib/src picomp3lib/interface picosounds .)
+add_subdirectory(/picomp3lib/src /picomp3lib/src/build)
+include_directories(common fs /picomp3lib/src /picomp3lib /picomp3lib/interface)
 
 pico_sdk_init()
 
@@ -45,7 +44,6 @@ function(embed_resource resource_file_name source_file_name variable_name)
 endfunction()
 
 embed_resource(output.mp3 resource.cpp outputmp3)
-# embed_resource(output.wav resource.cpp outputwav)
 
 add_executable(
         dcc
@@ -55,7 +53,7 @@ add_executable(
         /picomp3lib/interface/music_file.c
         MP3Player.cpp
         fs/ff.c
-        picosounds/config.c             picosounds/double_buffer.c      picosounds/picosounds.c         picosounds/pwm_channel.c                                    
+        
         )
 
 # add_link_options(
